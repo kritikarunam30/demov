@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import admin, doctor, patient, websocket_scribe, auth
+from routers import admin, doctor, patient, websocket_scribe, auth, whatsapp
 
 app = FastAPI(title="MediFlow-OS API", version="0.1.0")
 
@@ -23,6 +23,7 @@ app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(doctor.router, prefix="/api/doctor", tags=["doctor"])
 app.include_router(patient.router, prefix="/api/patient", tags=["patient"])
 app.include_router(websocket_scribe.router, prefix="/api", tags=["websocket"])
+app.include_router(whatsapp.router, prefix="/api/whatsapp", tags=["whatsapp"])
 
 
 @app.get("/")

@@ -64,7 +64,7 @@ class MedicalAIService:
                         contents=prompt,
                         config=types.GenerateContentConfig(
                             temperature=0.2,
-                            max_output_tokens=768,
+                            max_output_tokens=4096,
                             response_mime_type="application/json",
                         ),
                     )
@@ -140,31 +140,32 @@ class MedicalAIService:
             clean_line = line.strip()
             lower_line = clean_line.lower()
 
-            if re.search(r"\b(?:i['\"]?m|i am)\s+prescribing\s*:?", lower_line):
+            if re.search(r"\b(?:i['\"]?m|i am|im)\s+prescribing\b", lower_line):
                 in_prescription_section = True
                 continue
 
             if in_prescription_section:
-                if re.match(r"^(doctor|patient)\s*:", clean_line, re.I) and not re.search(
-                    r"\b(tablet|tab|capsule|cap|syrup|injection|cream|ointment)\b", clean_line, re.I
-                ):
+                if re.match(r"^(doctor|patient)\s*:", clean_line, re.I):
                     break
                 prescription_lines.append(clean_line)
 
         if not prescription_lines:
             prescription_lines = [
                 line for line in lines
-                if re.search(r"\b(tablet|tab|capsule|cap|syrup|injection|cream|ointment)\b", line, re.I)
+                if re.search(r"\b(tablet|tab|capsule|cap|syrup|injection|cream|ointment|lozenge|drops)\b", line, re.I)
+                or re.match(r"^\d+\.\s*", line)
+                or re.search(r"\b(take|use|apply|administer)\b", line, re.I)
             ]
 
         medication_pattern = re.compile(
-            r"^(?:tablet|tab|capsule|cap|syrup|injection|cream|ointment)\s+"
-            r"(?P<name>[A-Za-z][A-Za-z0-9\-]*(?:\s+[A-Za-z][A-Za-z0-9\-]*){0,2}?)\s+"
-            r"(?P<dosage>\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml|iu|units?))\s*[-:]\s*"
-            r"(?P<frequency>.+?)\s+for\s+"
-            r"(?P<duration>\d+\s+(?:day|days|week|weeks|month|months))\.?$",
+            r"^(?:\d+\.\s*)?(?P<name>[A-Za-z][A-Za-z0-9\s\-]{1,80}?)(?:\s+(?P<dosage>\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml|iu|units?)\b))?\s*(?:tablet|tab|capsule|cap|syrup|cream|ointment|lozenge|drops|injection)?\s*[-:]\s*(?P<instructions>.+)$",
             re.I,
         )
+        frequency_pattern = re.compile(
+            r"(?P<frequency>.+?)\s+for\s+(?P<duration>\d+\s+(?:day|days|week|weeks|month|months))",
+            re.I,
+        )
+        simple_duration_pattern = re.compile(r"\bfor\s+(?P<duration>\d+\s+(?:day|days|week|weeks|month|months))", re.I)
 
         seen = set()
         for line in prescription_lines:
@@ -172,10 +173,26 @@ class MedicalAIService:
             if not match:
                 continue
 
-            name = match.group("name").strip().title()
-            dosage = match.group("dosage").strip()
-            frequency = match.group("frequency").strip().rstrip(".")
-            duration = match.group("duration").strip()
+            name = match.group("name").strip()
+            dosage = (match.group("dosage") or "").strip()
+            instructions = (match.group("instructions") or "").strip()
+            frequency = ""
+            duration = ""
+
+            dur_match = frequency_pattern.search(instructions)
+            if dur_match:
+                frequency = dur_match.group("frequency").strip().rstrip(".")
+                duration = dur_match.group("duration").strip()
+            else:
+                dur_match = simple_duration_pattern.search(instructions)
+                if dur_match:
+                    duration = dur_match.group("duration").strip()
+                    frequency = instructions.replace(dur_match.group(0), "").strip().rstrip(".")
+                else:
+                    frequency = instructions
+
+            if not name:
+                continue
 
             key = (name.lower(), dosage.lower(), frequency.lower(), duration.lower())
             if key in seen:
@@ -184,11 +201,11 @@ class MedicalAIService:
 
             medications.append(
                 {
-                    "name": name,
+                    "name": name.title(),
                     "dosage": dosage,
                     "frequency": frequency,
                     "duration": duration,
-                    "instructions": frequency,
+                    "instructions": instructions or frequency,
                 }
             )
 

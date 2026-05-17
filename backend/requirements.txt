@@ -17,3 +17,6 @@ numpy
 # Database
 sqlalchemy>=2.0.0
 alembic>=1.12.0
+
+# Twilio for WhatsApp integration
+twilio>=8.0.0

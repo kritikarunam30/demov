@@ -11,9 +11,10 @@ api.interceptors.request.use((config) => {
 
   try {
     const role = JSON.parse(window.localStorage.getItem("mediflow.activeRole") || "null");
+    const admin = JSON.parse(window.localStorage.getItem("mediflow.selectedAdmin") || "null");
     const doctor = JSON.parse(window.localStorage.getItem("mediflow.selectedDoctor") || "null");
     const patient = JSON.parse(window.localStorage.getItem("mediflow.selectedPatient") || "null");
-    const userId = role === "doctor" ? doctor?.id : role === "patient" ? patient?.id : null;
+    const userId = role === "admin" ? admin?.id : role === "doctor" ? doctor?.id : role === "patient" ? patient?.id : null;
 
     if (role && userId) {
       config.headers["X-User-Role"] = role;
@@ -40,6 +41,8 @@ export const getAdminEmergencyAlerts = () => api.get("/api/admin/emergency/alert
 export const getAdminEmergencyProtocols = () => api.get("/api/admin/emergency/protocols");
 export const getAdminEmergencyContacts = () => api.get("/api/admin/emergency/contacts");
 export const getAdminEmergencyIncidents = () => api.get("/api/admin/emergency/incidents");
+export const getAdminEmergencyPredictions = () => api.get("/api/admin/emergency/predictions");
+export const acknowledgeEmergencyPrediction = (patientId) => api.post(`/api/admin/emergency/predictions/${patientId}/acknowledge`);
 
 export const getEmergencyAlerts = () => api.get("/api/admin/emergency/alerts");
 export const getEmergencyResources = () => api.get("/api/admin/emergency/resources");

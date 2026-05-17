@@ -45,6 +45,11 @@ class Config:
         if not self.gemini_api_keys and self.gemini_api_key:
             self.gemini_api_keys = [self.gemini_api_key]
         
+        # Twilio WhatsApp Configuration
+        self.twilio_account_sid = _clean_env("TWILIO_ACCOUNT_SID")
+        self.twilio_auth_token = _clean_env("TWILIO_AUTH_TOKEN")
+        self.twilio_whatsapp_number = _clean_env("TWILIO_WHATSAPP_NUMBER")
+        
         # Application Configuration
         self.environment = _clean_env("ENVIRONMENT") or "development"
     
@@ -71,6 +76,10 @@ class Config:
     def is_speech_configured(self) -> bool:
         """Check if at least one speech-to-text provider is configured"""
         return self.is_ibm_configured() or self.is_grok_configured()
+    
+    def is_twilio_configured(self) -> bool:
+        """Check if Twilio WhatsApp is configured"""
+        return bool(self.twilio_account_sid and self.twilio_auth_token and self.twilio_whatsapp_number)
 
 
 # Global config instance

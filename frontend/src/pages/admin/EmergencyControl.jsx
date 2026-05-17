@@ -7,6 +7,8 @@ import {
   getAdminEmergencyProtocols,
   getAdminEmergencyContacts,
   getAdminEmergencyIncidents,
+  getAdminEmergencyPredictions,
+  acknowledgeEmergencyPrediction,
 } from '../../api/index.js';
 
 export default function EmergencyControl() {
@@ -14,6 +16,7 @@ export default function EmergencyControl() {
   const [protocols, setProtocols] = useState({});
   const [contacts, setContacts] = useState([]);
   const [incidents, setIncidents] = useState([]);
+  const [predictions, setPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,20 +25,32 @@ export default function EmergencyControl() {
 
   const fetchEmergencyData = async () => {
     try {
-      const [alertsRes, protocolsRes, contactsRes, incidentsRes] = await Promise.all([
+      const [alertsRes, protocolsRes, contactsRes, incidentsRes, predictionsRes] = await Promise.all([
         getAdminEmergencyAlerts(),
         getAdminEmergencyProtocols(),
         getAdminEmergencyContacts(),
         getAdminEmergencyIncidents(),
+        getAdminEmergencyPredictions(),
       ]);
       setAlerts(alertsRes.data.alerts || []);
       setProtocols(protocolsRes.data.protocols || {});
       setContacts(contactsRes.data.contacts || []);
       setIncidents(incidentsRes.data.incidents || []);
+      setPredictions(predictionsRes.data.predictions || []);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching emergency data:', error);
       setLoading(false);
+    }
+  };
+
+  const handleAcknowledgePrediction = async (patientId) => {
+    try {
+      await acknowledgeEmergencyPrediction(patientId);
+      // Optimistically update
+      setPredictions(prev => prev.map(p => p.patient_id === patientId ? { ...p, acknowledged: true } : p));
+    } catch (error) {
+      console.error('Failed to acknowledge prediction:', error);
     }
   };
 
@@ -101,6 +116,78 @@ export default function EmergencyControl() {
         >
           Mass Casualty Protocol
         </button>
+      </div>
+
+      {/* Auto-Alert for Critical Unacknowledged Predictions */}
+      {predictions.some(p => p.risk_level === 'Critical' && !p.acknowledged) && (
+        <div className="bg-red-600 text-white px-6 py-4 rounded-xl shadow-lg flex items-center justify-between animate-pulse">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="w-8 h-8" />
+            <div>
+              <h3 className="font-bold text-lg">AI CRITICAL ALERT</h3>
+              <p>One or more patients are predicted to have a critical deterioration in vitals. Immediate doctor action required.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Predictive Risk Analysis */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Activity className="w-5 h-5 text-indigo-600" />
+          Predictive Risk Analysis (AI)
+        </h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="p-3 font-semibold text-slate-700 rounded-tl-lg">Patient</th>
+                <th className="p-3 font-semibold text-slate-700">Latest Vitals</th>
+                <th className="p-3 font-semibold text-slate-700">AI Risk Level</th>
+                <th className="p-3 font-semibold text-slate-700">Reasoning</th>
+                <th className="p-3 font-semibold text-slate-700 rounded-tr-lg">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {predictions.map((p) => {
+                const latest = p.vitals_history[p.vitals_history.length - 1];
+                return (
+                  <tr key={p.patient_id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="p-3 font-medium text-slate-900">{p.patient_name}</td>
+                    <td className="p-3 text-slate-600">
+                      HR: {latest.heart_rate} | BP: {latest.blood_pressure_sys}/{latest.blood_pressure_dia} | SpO2: {latest.spo2}%
+                    </td>
+                    <td className="p-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold \${
+                        p.risk_level === 'Critical' ? 'bg-red-100 text-red-800 border border-red-200' :
+                        p.risk_level === 'High' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                        p.risk_level === 'Moderate' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                        'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      }`}>
+                        {p.risk_level} ({p.risk_score}/100)
+                      </span>
+                    </td>
+                    <td className="p-3 text-slate-600 max-w-xs truncate" title={p.anomaly_reason}>
+                      {p.anomaly_reason}
+                    </td>
+                    <td className="p-3">
+                      {p.risk_level === 'Critical' && !p.acknowledged ? (
+                        <button
+                          onClick={() => handleAcknowledgePrediction(p.patient_id)}
+                          className="px-3 py-1 bg-red-600 text-white rounded-md text-xs font-semibold hover:bg-red-700 transition"
+                        >
+                          Acknowledge
+                        </button>
+                      ) : p.acknowledged ? (
+                        <span className="text-slate-400 text-xs italic">Acknowledged</span>
+                      ) : null}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Stats Overview */}

@@ -29,9 +29,9 @@ class AdminService:
         return {"queue": [q.to_dict() for q in queue_entries]}
 
     @staticmethod
-    def get_surge_forecast():
+    def get_surge_forecast(days: int = 7):
         """Get surge prediction forecast using Prophet ML"""
-        return generate_forecast(7)
+        return generate_forecast(days)
 
     @staticmethod
     def get_live_map(db: Session):

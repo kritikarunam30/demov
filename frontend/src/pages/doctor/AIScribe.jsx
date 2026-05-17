@@ -31,6 +31,8 @@ const AIScribe = () => {
     };
   }, []);
 
+
+
   const startRecording = async () => {
     try {
       setTranscript("");
@@ -81,15 +83,15 @@ const AIScribe = () => {
       const data = JSON.parse(event.data);
       
       if (data.type === "transcript_final") {
+        console.log("Received final transcript from WebSocket");
         setTranscript(data.transcript);
         generateFromTranscript(data.transcript);
       } else if (data.type === "error") {
         console.error("WebSocket error:", data.message);
         alert(`Transcription error: ${data.message}`);
+        setIsRecording(false);
       } else if (data.type === "stopped") {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.close();
-        }
+        console.log("WebSocket transcription stopped");
       }
     };
 
@@ -190,15 +192,22 @@ const AIScribe = () => {
     setIsLoading(true);
     
     try {
+      console.log("Uploading audio file:", file.name, file.size, "bytes");
       const response = await fetch("http://localhost:8000/api/doctor/scribe/audio", {
         method: "POST",
         body: formData
       });
       
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
+      console.log("Audio upload response:", data);
       
       if (data.transcription) {
         setTranscript(data.transcription.formatted_transcript);
+        console.log("✓ Transcript set from audio upload");
       }
       
       if (data.notes && data.prescription) {
@@ -206,10 +215,14 @@ const AIScribe = () => {
           notes: data.notes,
           prescription: data.prescription
         });
+        console.log("✓ Successfully set result with notes and prescription from audio");
+      } else if (!data.notes || !data.prescription) {
+        console.warn("Incomplete response - missing notes or prescription:", data);
+        alert("Audio processed but notes or prescription generation failed.");
       }
     } catch (error) {
       console.error("Error uploading audio:", error);
-      alert("Error processing audio file");
+      alert(`Error: Failed to process audio file. ${error.message || "Please try again."}`);
     } finally {
       setIsLoading(false);
     }
@@ -220,9 +233,46 @@ const AIScribe = () => {
     if (!trimmedTranscript) return;
 
     setIsLoading(true);
+    
     try {
       const response = await postDoctorScribe({ transcript: trimmedTranscript });
-      setResult(response.data);
+      
+      if (!response.data) {
+        throw new Error("No data in response");
+      }
+      
+      const { notes, prescription, full_prescription } = response.data;
+      
+      // Validate response
+      if (!notes) {
+        alert("Error: Server returned no notes.");
+        return;
+      }
+      
+      if (!prescription) {
+        alert("Error: Server returned no prescription.");
+        return;
+      }
+      
+      // Handle prescription - ensure it's an array
+      let prescriptionData = prescription;
+      
+      if (!Array.isArray(prescriptionData)) {
+        if (full_prescription && full_prescription.medications) {
+          prescriptionData = full_prescription.medications;
+        } else {
+          prescriptionData = [];
+        }
+      }
+      
+      setResult({
+        notes,
+        prescription: prescriptionData,
+        ...response.data
+      });
+    } catch (error) {
+      console.error("Error generating from transcript:", error);
+      alert(`Error: Failed to generate notes and prescription.\n\nDetails: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -446,13 +496,21 @@ const AIScribe = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {result.prescription.map((item, index) => (
-                    <tr key={index} className="border-t border-slate-100">
-                      <td className="py-2 text-slate-700">{item.name || item.medication || "-"}</td>
-                      <td className="py-2 text-slate-700">{item.dosage || "-"}</td>
-                      <td className="py-2 text-slate-700">{item.duration || "-"}</td>
+                  {Array.isArray(result.prescription) && result.prescription.length > 0 ? (
+                    result.prescription.map((item, index) => (
+                      <tr key={index} className="border-t border-slate-100">
+                        <td className="py-2 text-slate-700">{item.name || item.medication || "-"}</td>
+                        <td className="py-2 text-slate-700">{item.dosage || "-"}</td>
+                        <td className="py-2 text-slate-700">{item.duration || "-"}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="border-t border-slate-100">
+                      <td colSpan="3" className="py-4 text-center text-slate-500">
+                        No medications found in prescription
+                      </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
