@@ -5,6 +5,7 @@ python-multipart
 python-dotenv
 pydantic>=2.0.0
 plotly
+twilio
 
 # AI/ML services
 google-genai

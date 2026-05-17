@@ -107,7 +107,7 @@ const Home = () => {
           <h1 className="font-display-lg text-display-lg text-primary mb-2">
             MediFlow OS
           </h1>
-          <h2 className="font-headline-lg text-headline-lg text-secondary mb-4">
+          <h2 className="font-headline-lg text-headline-lg text-black mb-4">
             Unified Intelligent Healthcare Infrastructure
           </h2>
           <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto opacity-80">

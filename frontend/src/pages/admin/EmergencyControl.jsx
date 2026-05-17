@@ -90,7 +90,7 @@ export default function EmergencyControl() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading emergency control panel...</div>
+        <div className="text-black">Loading emergency control panel...</div>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function EmergencyControl() {
   const criticalAlerts = activeAlerts.filter(a => a.level === 'critical');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-black">
       <Navbar title="Emergency Control" subtitle="Emergency Management" />
 
       {/* Protocol Buttons */}
@@ -133,19 +133,19 @@ export default function EmergencyControl() {
 
       {/* Predictive Risk Analysis */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-indigo-600" />
+        <h2 className="text-xl font-semibold text-black mb-4 flex items-center gap-2">
+          <Activity className="w-5 h-5 text-black-600" />
           Predictive Risk Analysis (AI)
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="p-3 font-semibold text-slate-700 rounded-tl-lg">Patient</th>
-                <th className="p-3 font-semibold text-slate-700">Latest Vitals</th>
-                <th className="p-3 font-semibold text-slate-700">AI Risk Level</th>
-                <th className="p-3 font-semibold text-slate-700">Reasoning</th>
-                <th className="p-3 font-semibold text-slate-700 rounded-tr-lg">Action</th>
+                <th className="p-3 font-semibold text-black rounded-tl-lg">Patient</th>
+                <th className="p-3 font-semibold text-black">Latest Vitals</th>
+                <th className="p-3 font-semibold text-black">AI Risk Level</th>
+                <th className="p-3 font-semibold text-black">Reasoning</th>
+                <th className="p-3 font-semibold text-black rounded-tr-lg">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -154,7 +154,7 @@ export default function EmergencyControl() {
                 return (
                   <tr key={p.patient_id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="p-3 font-medium text-slate-900">{p.patient_name}</td>
-                    <td className="p-3 text-slate-600">
+                    <td className="p-3 text-black">
                       HR: {latest.heart_rate} | BP: {latest.blood_pressure_sys}/{latest.blood_pressure_dia} | SpO2: {latest.spo2}%
                     </td>
                     <td className="p-3">
@@ -167,7 +167,7 @@ export default function EmergencyControl() {
                         {p.risk_level} ({p.risk_score}/100)
                       </span>
                     </td>
-                    <td className="p-3 text-slate-600 max-w-xs truncate" title={p.anomaly_reason}>
+                    <td className="p-3 text-black max-w-xs truncate" title={p.anomaly_reason}>
                       {p.anomaly_reason}
                     </td>
                     <td className="p-3">
@@ -179,7 +179,7 @@ export default function EmergencyControl() {
                           Acknowledge
                         </button>
                       ) : p.acknowledged ? (
-                        <span className="text-slate-400 text-xs italic">Acknowledged</span>
+                        <span className="text-black text-xs italic">Acknowledged</span>
                       ) : null}
                     </td>
                   </tr>
@@ -220,12 +220,12 @@ export default function EmergencyControl() {
 
       {/* Active Alerts */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-black mb-4 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-orange-600" />
           Active Alerts
         </h2>
         {activeAlerts.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No active alerts</p>
+          <p className="text-black text-center py-8">No active alerts</p>
         ) : (
           <div className="space-y-4">
             {activeAlerts.map((alert) => {
@@ -267,7 +267,7 @@ export default function EmergencyControl() {
                     </div>
                     <button
                       onClick={() => acknowledgeAlert(alert.id)}
-                      className="ml-4 px-3 py-1 bg-white text-gray-700 rounded hover:bg-gray-100 text-sm"
+                      className="ml-4 px-3 py-1 bg-white text-black rounded hover:bg-gray-100 text-sm"
                     >
                       Acknowledge
                     </button>
@@ -281,7 +281,7 @@ export default function EmergencyControl() {
 
       {/* Emergency Protocols */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-black mb-4 flex items-center gap-2">
           <Shield className="w-5 h-5 text-blue-600" />
           Emergency Protocols
         </h2>
@@ -289,17 +289,17 @@ export default function EmergencyControl() {
           {Object.entries(protocols).map(([key, protocol]) => (
             <div key={key} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <h3 className="font-semibold mb-2">{protocol.name}</h3>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-black mb-3">
                 Activation time: {protocol.estimated_activation_time}
               </p>
               <div className="text-sm mb-3">
                 <p className="font-medium mb-1">Steps:</p>
-                <ol className="list-decimal list-inside space-y-1 text-gray-700">
+                <ol className="list-decimal list-inside space-y-1 text-black">
                   {protocol.steps.slice(0, 3).map((step, idx) => (
                     <li key={idx}>{step}</li>
                   ))}
                   {protocol.steps.length > 3 && (
-                    <li className="text-gray-500">+{protocol.steps.length - 3} more steps</li>
+                    <li className="text-black">+{protocol.steps.length - 3} more steps</li>
                   )}
                 </ol>
               </div>
@@ -316,7 +316,7 @@ export default function EmergencyControl() {
 
       {/* Emergency Contacts */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-black mb-4 flex items-center gap-2">
           <Phone className="w-5 h-5 text-green-600" />
           Emergency Contacts
         </h2>
@@ -326,7 +326,7 @@ export default function EmergencyControl() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold">{contact.name}</h3>
-                  <p className="text-sm text-gray-600">{contact.role}</p>
+                  <p className="text-sm text-black">{contact.role}</p>
                   <div className="mt-2 space-y-1 text-sm">
                     <p><strong>Phone:</strong> {contact.phone}</p>
                     <p><strong>Email:</strong> {contact.email}</p>
@@ -344,12 +344,12 @@ export default function EmergencyControl() {
 
       {/* Recent Incidents */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-black mb-4 flex items-center gap-2">
           <FileText className="w-5 h-5 text-purple-600" />
           Recent Incidents
         </h2>
         {incidents.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No recent incidents</p>
+          <p className="text-black text-center py-8">No recent incidents</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full">

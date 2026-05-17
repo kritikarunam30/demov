@@ -90,7 +90,7 @@ const PatientLogin = () => {
             </p>
             <div className="mt-6 rounded-xl bg-gradient-to-br from-primary-container/20 to-secondary-container/10 border border-primary-container/30 p-6">
               <p className="text-sm text-on-surface-variant">Selected patient</p>
-              <h2 className="font-headline-lg text-2xl font-semibold text-primary mt-2">
+              <h2 className="font-headline-lg text-2xl font-semibold text-black mt-2">
                 {selectedPatient?.name ?? "Select a patient"}
               </h2>
               <p className="text-on-surface-variant mt-1">

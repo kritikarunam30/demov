@@ -433,7 +433,7 @@ const AIScribe = () => {
                 Conversation transcript
               </label>
               <textarea
-                className="mt-2 w-full min-h-[160px] border border-slate-200 rounded-xl p-3 text-sm"
+                className="mt-2 w-full min-h-[160px] border border-slate-200 rounded-xl p-3 text-sm text-slate-900"
                 value={transcript}
                 onChange={(event) => setTranscript(event.target.value)}
                 placeholder="Enter or paste the consultation transcript here..."
@@ -454,7 +454,7 @@ const AIScribe = () => {
         {mode === "audio" && audioMode === "realtime" && transcript && (
           <div className="mt-4">
             <label className="text-sm font-semibold text-slate-700">Live Transcript</label>
-            <div className="mt-2 w-full min-h-[160px] border border-slate-200 rounded-xl p-3 text-sm bg-slate-50 whitespace-pre-line">
+            <div className="mt-2 w-full min-h-[160px] border border-slate-200 rounded-xl p-3 text-sm text-slate-900 bg-slate-50 whitespace-pre-line">
               {transcript || "Transcript will appear here as you speak..."}
             </div>
             {isLoading && (

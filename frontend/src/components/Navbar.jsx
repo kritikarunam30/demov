@@ -16,7 +16,7 @@ const Navbar = ({ title, subtitle, displayName }) => {
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <p className="text-sm uppercase tracking-[0.2em] text-slate-400">{subtitle}</p>
-        <h2 className="text-2xl font-semibold text-slate-900">{title}</h2>
+        <h2 className="text-2xl font-semibold text-black">{title}</h2>
       </div>
       <div className="flex items-center gap-3">
         <button className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900">
