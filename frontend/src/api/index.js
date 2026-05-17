@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https:/demov.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL || (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:8000" : "https://demov.onrender.com"),
 });
 
 api.interceptors.request.use((config) => {
@@ -78,10 +78,10 @@ export const getDoctorAppointmentsRange = (doctorId, startDate, endDate) =>
   api.get("/api/doctor/appointments-range", {
     params: doctorId
       ? {
-          doctor_id: doctorId,
-          start_date: startDate,
-          end_date: endDate,
-        }
+        doctor_id: doctorId,
+        start_date: startDate,
+        end_date: endDate,
+      }
       : undefined,
   });
 export const updateDoctorAppointmentStatus = (appointmentId, status) =>

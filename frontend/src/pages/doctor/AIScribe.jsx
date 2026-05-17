@@ -11,7 +11,7 @@ const AIScribe = () => {
   const [recordingTime, setRecordingTime] = useState(0);
   const [mode, setMode] = useState("text"); // "text" or "audio"
   const [audioMode, setAudioMode] = useState("realtime"); // "realtime" or "upload"
-  
+
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const wsRef = useRef(null);
@@ -38,12 +38,12 @@ const AIScribe = () => {
       setTranscript("");
 
       // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           sampleRate: 16000
-        } 
+        }
       });
       streamRef.current = stream;
 
@@ -57,7 +57,7 @@ const AIScribe = () => {
 
       setIsRecording(true);
       setIsPaused(false);
-      
+
       // Start timer
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
@@ -72,7 +72,10 @@ const AIScribe = () => {
   const startWebSocketRecording = (stream) => {
     // Connect to WebSocket
     const clientId = `client_${Date.now()}`;
-    const ws = new WebSocket(`ws://localhost:8000/api/ws/scribe/${clientId}`);
+    const apiBase = import.meta.env.VITE_API_URL || (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:8000" : "https://demov.onrender.com");
+    const wsProto = apiBase.startsWith("https") ? "wss" : "ws";
+    const host = apiBase.replace(/^https?:\/\//, "");
+    const ws = new WebSocket(`${wsProto}://${host}/api/ws/scribe/${clientId}`);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -81,7 +84,7 @@ const AIScribe = () => {
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      
+
       if (data.type === "transcript_final") {
         console.log("Received final transcript from WebSocket");
         setTranscript(data.transcript);
@@ -104,7 +107,7 @@ const AIScribe = () => {
     const mediaRecorder = new MediaRecorder(stream, {
       mimeType: 'audio/webm'
     });
-    
+
     mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         audioChunksRef.current.push(event.data);
@@ -130,9 +133,9 @@ const AIScribe = () => {
 
   const startLocalRecording = (stream) => {
     audioChunksRef.current = [];
-    
+
     const mediaRecorder = new MediaRecorder(stream);
-    
+
     mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         audioChunksRef.current.push(event.data);
@@ -190,26 +193,27 @@ const AIScribe = () => {
     formData.append("patient_age", "35");
 
     setIsLoading(true);
-    
+
     try {
       console.log("Uploading audio file:", file.name, file.size, "bytes");
-      const response = await fetch("http://localhost:8000/api/doctor/scribe/audio", {
+      const apiBase = import.meta.env.VITE_API_URL || (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:8000" : "https://demov.onrender.com");
+      const response = await fetch(`${apiBase}/api/doctor/scribe/audio`, {
         method: "POST",
         body: formData
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("Audio upload response:", data);
-      
+
       if (data.transcription) {
         setTranscript(data.transcription.formatted_transcript);
         console.log("✓ Transcript set from audio upload");
       }
-      
+
       if (data.notes && data.prescription) {
         setResult({
           notes: data.notes,
@@ -233,30 +237,30 @@ const AIScribe = () => {
     if (!trimmedTranscript) return;
 
     setIsLoading(true);
-    
+
     try {
       const response = await postDoctorScribe({ transcript: trimmedTranscript });
-      
+
       if (!response.data) {
         throw new Error("No data in response");
       }
-      
+
       const { notes, prescription, full_prescription } = response.data;
-      
+
       // Validate response
       if (!notes) {
         alert("Error: Server returned no notes.");
         return;
       }
-      
+
       if (!prescription) {
         alert("Error: Server returned no prescription.");
         return;
       }
-      
+
       // Handle prescription - ensure it's an array
       let prescriptionData = prescription;
-      
+
       if (!Array.isArray(prescriptionData)) {
         if (full_prescription && full_prescription.medications) {
           prescriptionData = full_prescription.medications;
@@ -264,7 +268,7 @@ const AIScribe = () => {
           prescriptionData = [];
         }
       }
-      
+
       setResult({
         notes,
         prescription: prescriptionData,
@@ -302,21 +306,19 @@ const AIScribe = () => {
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Input Mode</h3>
         <div className="flex gap-4">
           <button
-            className={`px-4 py-2 rounded-xl text-sm font-semibold ${
-              mode === "text"
+            className={`px-4 py-2 rounded-xl text-sm font-semibold ${mode === "text"
                 ? "bg-blue-600 text-white"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
+              }`}
             onClick={() => setMode("text")}
           >
             Text Input
           </button>
           <button
-            className={`px-4 py-2 rounded-xl text-sm font-semibold ${
-              mode === "audio"
+            className={`px-4 py-2 rounded-xl text-sm font-semibold ${mode === "audio"
                 ? "bg-blue-600 text-white"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
+              }`}
             onClick={() => setMode("audio")}
           >
             Audio Recording
@@ -326,21 +328,19 @@ const AIScribe = () => {
         {mode === "audio" && (
           <div className="mt-4 flex gap-4">
             <button
-              className={`px-4 py-2 rounded-xl text-sm font-semibold ${
-                audioMode === "realtime"
+              className={`px-4 py-2 rounded-xl text-sm font-semibold ${audioMode === "realtime"
                   ? "bg-green-600 text-white"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+                }`}
               onClick={() => setAudioMode("realtime")}
             >
               Real-time Transcription
             </button>
             <button
-              className={`px-4 py-2 rounded-xl text-sm font-semibold ${
-                audioMode === "upload"
+              className={`px-4 py-2 rounded-xl text-sm font-semibold ${audioMode === "upload"
                   ? "bg-green-600 text-white"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+                }`}
               onClick={() => setAudioMode("upload")}
             >
               Upload Audio File
