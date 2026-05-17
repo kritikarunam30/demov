@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://demov.onrender.com",
+  baseURL: "https:/demov.onrender.com",
 });
 
 api.interceptors.request.use((config) => {
